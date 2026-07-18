@@ -79,6 +79,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Resolve model code
         id: model
@@ -133,6 +134,7 @@ jobs:
 
       - name: Build kernel
         run: |
+          export KSU_VERSION=12851
           chmod +x build.sh
           ./build.sh \
             --model "${{ steps.model.outputs.model_code }}" \
