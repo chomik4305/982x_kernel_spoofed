@@ -6816,7 +6816,24 @@ boosted_task_util(struct task_struct *task)
 
 	trace_sched_boost_task(task, util, margin);
 
-	return util + margin;
+	util += margin;
+
+#ifdef CONFIG_UCLAMP_TASK
+	/*
+	 * Enforce the task's effective uclamp boundaries on top of the
+	 * schedtune boost. uclamp.min acts as a floor (minimum guaranteed
+	 * performance) while uclamp.max caps the boosted utilization, so a
+	 * task cannot be boosted beyond its allowed maximum. With default
+	 * clamps (min=0, max=1024) this is a no-op and legacy schedtune
+	 * behavior is fully preserved: schedtune remains the boosting
+	 * mechanism, uclamp only provides absolute boundaries.
+	 */
+	if (uclamp_is_used())
+		util = clamp(util, uclamp_eff_value(task, UCLAMP_MIN),
+				   uclamp_eff_value(task, UCLAMP_MAX));
+#endif
+
+	return util;
 }
 
 static unsigned long cpu_util_without(int cpu, struct task_struct *p);
@@ -7823,6 +7840,19 @@ struct energy_env *get_eenv(struct task_struct *p, int prev_cpu)
 	 * util for group utilization calculations
 	 */
 	eenv->util_delta = task_util_est(p);
+#ifdef CONFIG_UCLAMP_TASK
+	/*
+	 * Clamp the wakeup task's utilization contribution with its
+	 * effective uclamp boundaries so EAS energy calculations and
+	 * capacity fitting honor uclamp.min floors and uclamp.max caps.
+	 * Only the task's own clamps are used here (not rq aggregation)
+	 * since util_delta is added on top of destination CPU group sums.
+	 */
+	if (uclamp_is_used())
+		eenv->util_delta = clamp(eenv->util_delta,
+					 uclamp_eff_value(p, UCLAMP_MIN),
+					 uclamp_eff_value(p, UCLAMP_MAX));
+#endif
 	eenv->util_delta_boosted = boosted_task_util(p);
 
 	cpumask_and(&cpumask_possible_cpus, &p->cpus_allowed, cpu_online_mask);

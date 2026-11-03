@@ -354,6 +354,16 @@ static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu)
 #endif
 	*util = freqvar_boost_vector(cpu, *util);
 	*util = boosted_cpu_util(cpu);
+#ifdef CONFIG_UCLAMP_TASK
+	/*
+	 * Clamp the schedtune/EMS-boosted utilization with the CPU's
+	 * aggregated uclamp boundaries so frequency selection honors
+	 * uclamp.min floors (e.g. top-app boost) and uclamp.max caps
+	 * (e.g. background restrictions). uclamp_util_with() is a no-op
+	 * until userspace opts in to uclamp, preserving legacy behavior.
+	 */
+	*util = uclamp_util_with(cpu_rq(cpu), *util, NULL);
+#endif
 	*util = min(*util, max_cap);
 	*max = max_cap;
 
