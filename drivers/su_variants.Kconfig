@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: GPL-2.0
+# SU variant selection - adapted from FloppyKernel (FlopKernel-Series).
+#
+# This tree supports a single SU implementation: ReSukiSU (SukiSU-Ultra,
+# vendored under drivers/sukisu). The original multi-variant choice
+# (KernelSU Next / SukiSU / XXKSU) is collapsed to a fixed selection;
+# KSU_SUKI is always enabled so the ReSukiSU Kconfig below just works.
+
+config KSU_SUKI
+	bool "SukiSU Ultra (ReSukiSU)"
+	default y
+	select OVERLAY_FS
+	help
+	  Enable SukiSU Ultra (ReSukiSU) with SUSFS support.
+
+choice
+	prompt "Hook method"
+	optional
+	depends on KSU_SUKI
+	default KSU_MANUAL_HOOK
+	help
+	  Select which hook method to use.
+
+config KSU_KPROBES_HOOK
+	bool "Use kprobes"
+	help
+	  Enable KPROBES, KRETPROBES and TRACEPOINT hook for KernelSU core.
+	  This should not be used on kernel below 5.10.
+
+config KSU_TRACEPOINT_HOOK
+	bool "Use tracepoints"
+	depends on TRACEPOINTS
+	help
+	  Use tracepoints for function hooking.
+	  Only supported by SukiSU.
+
+config KSU_MANUAL_HOOK
+	bool "Use manual hooks"
+	help
+	  Use manual hooks instead of kprobes.
+
+config KSU_SYSCALL_HOOK
+	bool "KernelSU syscall hook mode."
+	depends on KPROBES && KRETPROBES && HAVE_SYSCALL_TRACEPOINTS
+	help
+	  Enable KPROBES, KRETPROBES and TRACEPOINT hook for KernelSU core.
+	  This should not be used on kernel below 5.10.
+
+endchoice
+
+source "drivers/sukisu/kernel/Kconfig"
