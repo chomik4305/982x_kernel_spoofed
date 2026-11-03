@@ -7933,7 +7933,8 @@ static int find_energy_efficient_cpu(struct sched_domain *sd,
 		 * all if(prefer_idle) blocks.
 		 */
 		prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
-				(schedtune_prefer_idle(p) > 0) : 0;
+				((schedtune_prefer_idle(p) > 0) ||
+				 uclamp_latency_sensitive(p)) : 0;
 
 		eenv->max_cpu_count = EAS_CPU_BKP + 1;
 
@@ -8022,7 +8023,8 @@ static inline int wake_energy(struct task_struct *p, int prev_cpu,
 		 * Force prefer-idle tasks into the slow path, this may not happen
 		 * if none of the sd flags matched.
 		 */
-		if (schedtune_prefer_idle(p) > 0 && !sync)
+		if ((schedtune_prefer_idle(p) > 0 ||
+		     uclamp_latency_sensitive(p)) && !sync)
 			return false;
 	}
 	return true;
