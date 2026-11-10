@@ -17,7 +17,7 @@ Options:
     -m, --model [value]     Specify the model code of the phone
     -k, --ksu [Y/n]         Include KernelSU
     -r, --recovery [y/N]    Compile kernel for an Android Recovery
-    -g, --gpu-max [value]   Set GPU max MHz (ex: 806) using forOC tables (default: 702)
+    -g, --gpu-max [value]   Set GPU max MHz (ex: 806) using forOC tables (default: stock, no OC)
 EOF
 }
 
@@ -292,11 +292,7 @@ if [[ "$KSU_OPTION" == "y" ]]; then
 fi
 
 if [ -z "$GPU_MAX" ]; then
-    if [[ "$MODEL" == d* ]]; then
-        GPU_MAX=$DEFAULT_GPU_MAX_D
-    else
-        GPU_MAX=$DEFAULT_GPU_MAX_BEYOND
-    fi
+    echo "No GPU max specified, keeping stock GPU tables (no OC)."
 fi
 
 if [ -n "$GPU_MAX" ]; then
