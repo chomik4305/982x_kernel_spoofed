@@ -26,10 +26,14 @@ static int ksu_task_fix_setuid(struct cred *new, const struct cred *old, int fla
 #endif
 
 #ifdef CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK
+#ifdef CONFIG_KSU_SUSFS
+extern struct static_key_true ksu_is_init_rc_hook_enabled;
+#else
 #ifdef KSU_COMPAT_USE_STATIC_KEY
 extern struct static_key_true ksu_init_rc_hook;
 #else
 extern bool ksu_init_rc_hook __read_mostly;
+#endif
 #endif
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 2, 0) && !defined(KSU_COMPAT_HAS_LIST_OF_LSM_HOOKS)
@@ -40,6 +44,10 @@ static int ksu_unregister_file_permission(void *data);
 
 static int ksu_file_permission(struct file *file, int mask)
 {
+#ifdef CONFIG_KSU_SUSFS
+    if (static_branch_unlikely(&ksu_is_init_rc_hook_enabled))
+        ksu_handle_initrc(file);
+#else
 #ifdef KSU_COMPAT_USE_STATIC_KEY
     if (static_branch_unlikely(&ksu_init_rc_hook))
         ksu_handle_initrc(file);
@@ -54,6 +62,7 @@ static int ksu_file_permission(struct file *file, int mask)
         stop_machine(ksu_unregister_file_permission, NULL, NULL);
 #endif
     }
+#endif
 #endif
 
     return 0;

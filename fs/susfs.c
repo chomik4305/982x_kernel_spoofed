@@ -1589,10 +1589,6 @@ void susfs_init(void) {
 DEFINE_STATIC_KEY_FALSE(ksu_init_rc_hook_key_false);
 EXPORT_SYMBOL(ksu_init_rc_hook_key_false);
 
-/* Alias requested by SukiSU's lsm_hooks.c which expects ksu_init_rc_hook as a key */
-extern struct static_key_false ksu_init_rc_hook __attribute__((alias("ksu_init_rc_hook_key_false")));
-EXPORT_SYMBOL(ksu_init_rc_hook);
-
 DEFINE_STATIC_KEY_FALSE(ksu_input_hook_key_false);
 EXPORT_SYMBOL(ksu_input_hook_key_false);
 #endif
