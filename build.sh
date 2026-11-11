@@ -292,7 +292,11 @@ if [[ "$KSU_OPTION" == "y" ]]; then
 fi
 
 if [ -z "$GPU_MAX" ]; then
-    echo "No GPU max specified, keeping stock GPU tables (no OC)."
+    case "$MODEL" in
+        beyond*) GPU_MAX="$DEFAULT_GPU_MAX_BEYOND" ;;
+        *) GPU_MAX="$DEFAULT_GPU_MAX_D" ;;
+    esac
+    echo "No GPU max specified, applying default GPU cap: ${GPU_MAX} MHz."
 fi
 
 if [ -n "$GPU_MAX" ]; then
